@@ -42,19 +42,19 @@ namespace Helsenorge.Messaging.Tests.Mocks
             return Task.CompletedTask;
         }
 
-        public IMessagingReceiver CreateMessageReceiver(string id)
+        public Task<IMessagingReceiver> CreateMessageReceiver(string id)
         {
-            return new MockReceiver(this, id);
+            return Task.FromResult<IMessagingReceiver>(new MockReceiver(this, id));
         }
 
-        public IMessagingSender CreateMessageSender(string id)
+        public Task<IMessagingSender> CreateMessageSender(string id)
         {
-            return new MockSender(this, id);
+            return Task.FromResult<IMessagingSender>(new MockSender(this, id));
         }
 
-        public IMessagingMessage CreateMessage(Stream stream)
+        public Task<IMessagingMessage> CreateMessage(Stream stream)
         {
-            return new MockMessage(stream);
+            return Task.FromResult<IMessagingMessage>(new MockMessage(stream));
         }
     }
 

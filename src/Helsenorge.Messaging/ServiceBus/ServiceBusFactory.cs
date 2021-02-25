@@ -29,31 +29,29 @@ namespace Helsenorge.Messaging.ServiceBus
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public IMessagingReceiver CreateMessageReceiver(string id)
+        public Task<IMessagingReceiver> CreateMessageReceiver(string id)
         {
-            return new ServiceBusReceiver(_connection, id, _logger);
+            return Task.FromResult<IMessagingReceiver>(new ServiceBusReceiver(_connection, id, _logger));
         }
 
-        public IMessagingSender CreateMessageSender(string id)
+        public Task<IMessagingSender> CreateMessageSender(string id)
         {
-            return new ServiceBusSender(_connection, id, _logger);
+            return Task.FromResult<IMessagingSender>(new ServiceBusSender(_connection, id, _logger));
         }
 
         public bool IsClosed => _connection.IsClosedOrClosing;
 
-        public async Task Close() => await _connection.CloseAsync();
+        public async Task Close() => await _connection.CloseAsync().ConfigureAwait(false);
 
-        public IMessagingMessage CreateMessage(Stream stream)
+        public async Task<IMessagingMessage> CreateMessage(Stream stream)
         {
-            using (var memoryStream = new MemoryStream())
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream).ConfigureAwait(false);
+            stream.Close();
+            return new ServiceBusMessage(new Message
             {
-                stream.CopyTo(memoryStream);
-                stream.Close();
-                return new ServiceBusMessage(new Message
-                {
-                    BodySection = new Data { Binary = memoryStream.ToArray() }
-                });
-            }
+                BodySection = new Data { Binary = memoryStream.ToArray() }
+            });
         }
     }
 }
